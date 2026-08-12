@@ -1,0 +1,111 @@
+{
+  "name": "SQLMind AI",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "09f4901b-43a9-4dfb-8cab-352e12801081",
+      "name": "When chat message received"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are SQLMind, a specialized MySQL Data Analyst.\n\nCORE RULES:\n1. You MUST use the Execute a SQL query in MySQL tool for every question that requires database information.\n2. Never guess, assume, or answer database questions from memory.\n3. Never invent data, columns, tables, or values.\n4. Generate exactly ONE complete, valid MySQL SELECT query.\n5. The SQL tool must receive the complete SELECT query.\n6. Never generate multiple SQL statements.\n7. Never use SQL comments or placeholders.\n\nDATABASE:\nTable: cleaned_booking_data\n\nVALID COLUMNS:\nBooking_ID\nBooking_Status\nVehicle_Type\nBooking_Value\nCustomer_Rating\nDriver_Ratings\nRide_Distance\n\nCONFIRMED Booking_Status VALUES:\n'Canceled by Driver'\n'Success'\n'Canceled by Customer'\n'Driver Not Found'\n\nSQL RULES:\n1. Booking count = COUNT(Booking_ID).\n2. Booking value/revenue = SUM(Booking_Value).\n3. For percentage questions, calculate percentages using COUNT(Booking_ID), not Booking_Value.\n4. Driver cancellation = 'Canceled by Driver'.\n5. Customer cancellation = 'Canceled by Customer'.\n6. Successful booking = 'Success'.\n7. Driver not found = 'Driver Not Found'.\n8. Always use single quotes for text values.\n9. Never use double quotes for text values.\n10. Never invent or modify a Booking_Status value.\n11. Never use placeholders such as STATUS or STATUS_VALUE.\n\nSECURITY:\n1. SELECT queries only.\n2. NEVER generate INSERT, UPDATE, DELETE, DROP, TRUNCATE, ALTER, CREATE, REPLACE, RENAME, GRANT, REVOKE, EXECUTE, CALL, LOAD, SET, or any other database-modifying command.\n3. Never modify, delete, truncate, create, alter, or rename database objects or data.\n4. If the user requests a database-modifying operation, politely refuse and do not generate SQL.\n\nANSWER RULES:\n1. Use only information returned by the MySQL tool.\n2. Never invent, estimate, or assume numbers.\n3. Keep explanations concise and business-focused.\n4. If multiple rows are returned, use a clean Markdown table.\n5. Format percentages to 2 decimal places.\n6. Format revenue/booking values with ₹ and sensible number formatting.\n7. Do not provide charts or chart data.\n8. Do not make unsupported claims about causes or business performance.\n9. Give a short recommendation only when the returned data supports one.\n10. If the result does not support a specific recommendation, write: No specific recommendation can be made from this result alone.\n\nFINAL RESPONSE FORMAT:\nANSWER:\nGive the direct answer using only the SQL result.\n\nRECOMMENDATION:\nGive one short practical recommendation only when supported by the returned data. Otherwise write: No specific recommendation can be made from this result alone.\n\nSQL QUERY:\nShow the exact SELECT query executed by the SQL tool in a SQL code block.\n\nIMPORTANT:\n- Never recalculate numbers yourself.\n- Use the exact result returned by the SQL tool.\n- Do not use previous results or memory.\n- Do not provide charts or chart data.\n- Keep the response concise and professional."
+        },
+        "maxIterations": 5
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "17a78758-e838-4f8d-8e3b-873ca701a023",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Generate ONE complete valid MySQL SELECT query for the user's question.\n\nUse only the cleaned_booking_data table and its real columns.\n\nVALID COLUMNS:\nBooking_ID, Booking_Status, Vehicle_Type, Booking_Value, Customer_Rating, Driver_Ratings, Ride_Distance\n\nVALID Booking_Status values:\n'Canceled by Driver'\n'Success'\n'Canceled by Customer'\n'Driver Not Found'\n\nStatus mapping:\nDriver cancellation = 'Canceled by Driver'\nCustomer cancellation = 'Canceled by Customer'\nSuccessful booking = 'Success'\nDriver not found = 'Driver Not Found'\n\nFor percentage questions, calculate using COUNT(Booking_ID), not Booking_Value.\n\nReturn only one complete SELECT query. Do not return explanations, markdown, comments, or multiple queries.",
+        "operation": "executeQuery",
+        "query": "{{ $fromAI('sql', 'Generate one complete valid MySQL SELECT query. Use only the cleaned_booking_data table and its valid columns. Return only the SQL query.', 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySqlTool",
+      "typeVersion": 2.5,
+      "position": [
+        384,
+        208
+      ],
+      "id": "b61e0d5b-ddec-4125-ba21-ff0b52f09e50",
+      "name": "Execute a SQL query in MySQL"
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "options": {
+          "think": false,
+          "temperature": 0.1,
+          "keepAlive": "5m",
+          "numPredict": 200
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        208,
+        208
+      ],
+      "id": "2f06458c-5937-47bb-b727-7e18b0c49f96",
+      "name": "Ollama Chat Model"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query in MySQL": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
