@@ -1,4 +1,9 @@
+![SQLMind AI Banner](./sqlmind-ai-banner.png)
+
+
 # SQLMind AI – MySQL Data Analyst Agent
+
+
 
 SQLMind AI is an AI-powered MySQL Data Analyst Agent built with **n8n, Ollama, and MySQL**.
 
